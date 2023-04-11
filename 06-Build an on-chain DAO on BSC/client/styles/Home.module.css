@@ -56,7 +56,7 @@
 
 .formInput,
 .formTextarea {
-  width: 70%;
+  width: 90%;
   padding: 0.5rem;
   font-size: 1rem;
   border-radius: 0.5rem;
@@ -65,22 +65,29 @@
 
 .button {
   padding: 0.5rem 1rem;
-  margin: 0 0.5rem;
   border-radius: 0.5rem;
-  border: none;
   color: white;
   background-color: black;
   font-weight: bold;
   cursor: pointer;
+  border: 1px solid black;
   transition: background-color 0.2s ease-in-out;
+}
+
+.topButton {
+  margin: 0 0.5rem;
 }
 
 .yesButton {
   background-color: green;
+  border: 1px solid green;
+  margin-right: 1rem;
 }
 
 .noButton {
   background-color: red;
+  border: 1px solid red;
+  margin-right: 1rem;
 }
 
 .button:hover {
@@ -91,4 +98,8 @@
 
 .voteCounts {
   margin-bottom: 1rem;
+}
+
+.operationButton {
+  display: flex;
 }

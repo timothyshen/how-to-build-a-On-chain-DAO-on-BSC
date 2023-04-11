@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { initWeb3, initContract } from "../app/utils";
 import styles from "@/styles/Home.module.css";
 
@@ -11,6 +11,10 @@ export default function Home() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [proposals, setProposals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [onVoting, setOnVoting] = useState(false);
+  const [onExecution, setOnExecution] = useState(false);
+  const [toggle, setToggle] = useState(false);
 
   const handleConnectClick = useCallback(async () => {
     try {
@@ -31,6 +35,7 @@ export default function Home() {
     }
   }, []);
 
+  // Fetch proposal counts on page load
   const getProposals = useCallback(async (contract) => {
     try {
       // Get proposal count
@@ -38,10 +43,11 @@ export default function Home() {
       setProposalCount(proposalCount);
     } catch (error) {
       // Display error message
-      alert(`Error getting proposals: ${error.message}`);
+      alert(`Error getting proposals count: ${error.message}`);
     }
   }, []);
 
+  // Fetch proposals on page load
   const getAllProposals = useCallback(async () => {
     try {
       const proposalPromises = [];
@@ -59,14 +65,15 @@ export default function Home() {
 
   const createProposal = async () => {
     try {
-      console.log("title", title);
       // Validate input
+      setLoading(true);
       if (!title || !description) {
         alert("Please enter a title and description for the proposal.");
+        await setLoading(false);
+        return;
       }
 
       // Send the createProposal transaction
-      console.log("account", account);
       const result = await contract.methods
         .createProposal(title, description)
         .send({ from: account });
@@ -74,6 +81,7 @@ export default function Home() {
       // Check for successful transaction
       if (result.status) {
         alert("Proposal created successfully");
+        setLoading(false);
         setTitle("");
         setDescription("");
         // Fetch updated proposals
@@ -86,18 +94,31 @@ export default function Home() {
     }
   };
 
+  const toggleProposal = () => {
+    setToggle(!toggle);
+  };
+
+  // Vote on a proposal
   const voteProposal = async (id, vote) => {
     try {
+      setOnVoting(true);
       await contract.methods.voteOnProposal(id, vote).send({ from: account });
+      setOnVoting(false);
     } catch (error) {
+      setOnVoting(false);
       alert(`Error voting on proposal: ${error.message}`);
     }
   };
 
+  // Execute a proposal
   const executeProposal = async (id) => {
     try {
+      setOnExecution(true);
       await contract.methods.executeProposal(id).send({ from: account });
+      await getAllProposals();
+      setOnExecution(false);
     } catch (error) {
+      setOnExecution(false);
       alert(`Error executing proposal: ${error.message}`);
     }
   };
@@ -130,12 +151,18 @@ export default function Home() {
               <p>Current available Proposal Number: {proposalCount}</p>
             </div>
             <div className={styles.buttonsContainer}>
-              <button className={styles.button} onClick={getAllProposals}>
+              <button
+                className={`${styles.button} ${styles.topButton}`}
+                onClick={getAllProposals}
+              >
                 View Proposals
               </button>
-              {/* <button className={styles.button} onClick={createProposal}>
+              <button
+                className={`${styles.button} ${styles.topButton}`}
+                onClick={toggleProposal}
+              >
                 Create Proposal
-              </button> */}
+              </button>
             </div>
             {sortedProposals.map((proposal, index) => (
               <div key={index} className={styles.proposal}>
@@ -148,62 +175,68 @@ export default function Home() {
                 <p className={styles.voteCounts}>
                   Executed: {proposal.executed ? "Yes" : "No"}
                 </p>
-                {proposal.executed ? null : (
-                  <div className={styles.voteButtonsContainer}>
-                    <button
-                      className={`${styles.button} ${styles.yesButton}`}
-                      onClick={() => voteProposal(proposal.id, 0)}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      className={`${styles.button} ${styles.noButton}`}
-                      onClick={() => voteProposal(proposal.id, 1)}
-                    >
-                      No
-                    </button>
-                  </div>
-                )}
+                <div className={styles.operationButton}>
+                  {proposal.executed ? null : (
+                    <div className={styles.voteButtonsContainer}>
+                      <button
+                        className={`${styles.button} ${styles.yesButton}`}
+                        onClick={() => voteProposal(proposal.id, 0)}
+                        disabled={onVoting}
+                      >
+                        {onVoting ? "Voting..." : "Yes"}
+                      </button>
+                      <button
+                        className={`${styles.button} ${styles.noButton}`}
+                        onClick={() => voteProposal(proposal.id, 1)}
+                        disabled={onVoting}
+                      >
+                        {onVoting ? "Voting..." : "No"}
+                      </button>
+                    </div>
+                  )}
 
-                {proposal.owner == account && (
-                  <button
-                    className={styles.button}
-                    onClick={() => executeProposal(proposal.id)}
-                  >
-                    Execute
-                  </button>
-                )}
+                  {proposal.owner == account && (
+                    <button
+                      className={styles.button}
+                      onClick={() => executeProposal(proposal.id)}
+                    >
+                      {onExecution ? "Executing..." : "Execute"}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
-            <div className={styles.proposal}>
-              <h3>Create a Proposal</h3>
-              <form>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Proposal Title</label>
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    placeholder="Enter proposal title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Proposal Description
-                  </label>
-                  <textarea
-                    className={styles.formTextarea}
-                    placeholder="Enter proposal description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-              </form>
-              <button className={styles.button} onClick={createProposal}>
-                Submit Proposal
-              </button>
-            </div>
+            {toggle ? (
+              <div className={styles.proposal}>
+                <h3>Create a Proposal</h3>
+                <form>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Proposal Title</label>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      placeholder="Enter proposal title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      Proposal Description
+                    </label>
+                    <textarea
+                      className={styles.formTextarea}
+                      placeholder="Enter proposal description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                </form>
+                <button className={styles.button} onClick={createProposal}>
+                  {loading ? `Loading...` : `Submit Proposal`}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className={styles.homepage}>
