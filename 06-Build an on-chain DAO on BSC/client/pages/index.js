@@ -1,7 +1,6 @@
 import Head from "next/head";
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { initWeb3, initContract } from "../app/utils";
-import CreateProposal from "@/app/components/CreaeteProposal";
 import styles from "@/styles/Home.module.css";
 
 export default function Home() {
@@ -32,8 +31,6 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {}, []);
-
   const getProposals = useCallback(async (contract) => {
     try {
       // Get proposal count
@@ -60,15 +57,16 @@ export default function Home() {
     }
   }, [proposalCount, contract]);
 
-  const createProposal = useCallback(async () => {
+  const createProposal = async () => {
     try {
+      console.log("title", title);
       // Validate input
       if (!title || !description) {
         alert("Please enter a title and description for the proposal.");
-        return;
       }
 
       // Send the createProposal transaction
+      console.log("account", account);
       const result = await contract.methods
         .createProposal(title, description)
         .send({ from: account });
@@ -86,29 +84,23 @@ export default function Home() {
     } catch (error) {
       alert(`Error submitting proposal: ${error.message}`);
     }
-  }, [title, description, account, contract, getAllProposals]);
+  };
 
-  const voteProposal = useCallback(
-    async (id, vote) => {
-      try {
-        await contract.methods.voteOnProposal(id, vote).send({ from: account });
-      } catch (error) {
-        alert(`Error voting on proposal: ${error.message}`);
-      }
-    },
-    [contract, account]
-  );
+  const voteProposal = async (id, vote) => {
+    try {
+      await contract.methods.voteOnProposal(id, vote).send({ from: account });
+    } catch (error) {
+      alert(`Error voting on proposal: ${error.message}`);
+    }
+  };
 
-  const executeProposal = useCallback(
-    async (id) => {
-      try {
-        await contract.methods.executeProposal(id).send({ from: account });
-      } catch (error) {
-        alert(`Error executing proposal: ${error.message}`);
-      }
-    },
-    [contract]
-  );
+  const executeProposal = async (id) => {
+    try {
+      await contract.methods.executeProposal(id).send({ from: account });
+    } catch (error) {
+      alert(`Error executing proposal: ${error.message}`);
+    }
+  };
 
   const sortedProposals = useMemo(() => {
     return proposals.sort((a, b) => {
@@ -207,10 +199,10 @@ export default function Home() {
                     onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
-                <button className={styles.button} onClick={createProposal}>
-                  Submit Proposal
-                </button>
               </form>
+              <button className={styles.button} onClick={createProposal}>
+                Submit Proposal
+              </button>
             </div>
           </div>
         ) : (

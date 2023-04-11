@@ -31,6 +31,7 @@ contract DAOProposal {
         proposal.proposalId = keccak256(abi.encodePacked(proposalCount));
         proposal.title = _title;
         proposal.description = _description;
+        proposal.executed = false;
         proposalCount++;
         return proposalCount - 1;
     }

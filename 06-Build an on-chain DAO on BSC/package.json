@@ -6,6 +6,17 @@
     "test": "truffle test"
   },
   "dependencies": {
-    "@truffle/hdwallet-provider": "^2.1.7"
+    "@metamask/detect-provider": "^1.2.0",
+    "@rails/webpacker": "^5.4.3",
+    "@truffle/hdwallet-provider": "^2.0.9",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "node_modules-path": "^2.0.5",
+    "truffle-hdwallet-provider": "^1.0.17",
+    "webpack": "4",
+    "webpack-cli": "^4.10.0"
+  },
+  "devDependencies": {
+    "truffle-contract": "^4.0.31"
   }
 }
