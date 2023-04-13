@@ -7,7 +7,7 @@ export default function Home() {
   const [connected, setConnected] = useState(false);
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState(null);
-  const [proposalCount, setProposalCount] = useState(null);
+  const [proposalCount, setProposalCount] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [proposals, setProposals] = useState([]);
@@ -40,7 +40,9 @@ export default function Home() {
     try {
       // Get proposal count
       const proposalCount = await contract.methods.proposalCount().call();
-      setProposalCount(proposalCount);
+      if (proposalCount != 0) {
+        setProposalCount(proposalCount);
+      }
     } catch (error) {
       // Display error message
       alert(`Error getting proposals count: ${error.message}`);
@@ -104,6 +106,7 @@ export default function Home() {
       setOnVoting(true);
       await contract.methods.voteOnProposal(id, vote).send({ from: account });
       setOnVoting(false);
+      await getAllProposals();
     } catch (error) {
       setOnVoting(false);
       alert(`Error voting on proposal: ${error.message}`);
@@ -114,6 +117,7 @@ export default function Home() {
   const executeProposal = async (id) => {
     try {
       setOnExecution(true);
+      console.log(id);
       await contract.methods.executeProposal(id).send({ from: account });
       await getAllProposals();
       setOnExecution(false);
@@ -199,6 +203,7 @@ export default function Home() {
                     <button
                       className={styles.button}
                       onClick={() => executeProposal(proposal.id)}
+                      disabled={proposal.executed}
                     >
                       {onExecution ? "Executing..." : "Execute"}
                     </button>

@@ -15,8 +15,5 @@ export const initWeb3 = async () => {
 };
 
 export const initContract = async (web3) => {
-  return new web3.eth.Contract(
-    DAOProposal.abi,
-    "0x4633B99D5D54D7F4205aE16Ccb2b509d92Bb1e3E"
-  );
+  return new web3.eth.Contract(DAOProposal.abi, process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
 };

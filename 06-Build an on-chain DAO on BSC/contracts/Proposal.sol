@@ -50,7 +50,7 @@ contract DAOProposal {
 
     function executeProposal(uint40 proposalIndex) external {
         Proposal storage proposal = Proposals[proposalIndex];
-        require(proposal.id != 0, "Proposal does not exist");
+        // require(proposal.id != 0, "Proposal does not exist");
         require(proposal.owner == msg.sender, "You are not the owner of this proposal");
         require(proposal.votesYes > proposal.votesNo, "Proposal has not passed");
         require(proposal.executed == false, "Proposal has already been executed");
